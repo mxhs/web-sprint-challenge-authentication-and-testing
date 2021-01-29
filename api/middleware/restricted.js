@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { jwtSecret } = require("../../config/secrets");
 
 module.exports = async (req, res, next) => {
 	try {
@@ -6,7 +7,7 @@ module.exports = async (req, res, next) => {
 		if (!token) {
 			res.status(401).json({ errorMessage: "token required" });
 		} else if (token) {
-			jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+			jwt.verify(token, jwtSecret, async (err, decoded) => {
 				if (err) {
 					res.status(401).json({ errorMessage: "token invalid" });
 				} else {

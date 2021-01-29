@@ -3,6 +3,7 @@ const bcryptjs = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const Users = require("./auth-model");
+const { jwtSecret } = require("../../config/secrets");
 const { validateRegister, validateLogin } = require("./auth.middleware");
 
 router.post("/register", validateRegister, async (req, res, next) => {
@@ -14,7 +15,7 @@ router.post("/register", validateRegister, async (req, res, next) => {
 
 		credentials.password = hash;
 		const newUser = await Users.add(credentials);
-		res.status(201).json(newUser[0]);
+		res.status(201).json(newUser);
 	} catch (err) {
 		next(err);
 	}
@@ -91,9 +92,8 @@ function generateToken(user) {
 	const options = {
 		expiresIn: "1h",
 	};
-	const secret = process.env.JWT_SECRET;
 
-	return jwt.sign(payload, secret, options);
+	return jwt.sign(payload, jwtSecret, options);
 }
 
 module.exports = router;
