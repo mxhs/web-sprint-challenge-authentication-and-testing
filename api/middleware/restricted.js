@@ -1,6 +1,23 @@
-module.exports = (req, res, next) => {
-  next();
-  /*
+const jwt = require("jsonwebtoken");
+
+module.exports = async (req, res, next) => {
+	try {
+		const token = req.headers.authorization;
+		if (!token) {
+			res.status(401).json({ errorMessage: "token required" });
+		} else if (token) {
+			jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+				if (err) {
+					res.status(401).json({ errorMessage: "token invalid" });
+				} else {
+					next();
+				}
+			});
+		}
+	} catch (err) {
+		next(err);
+	}
+	/*
     IMPLEMENT
 
     1- On valid token in the Authorization header, call next.

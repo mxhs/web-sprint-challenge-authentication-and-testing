@@ -1,8 +1,24 @@
-const router = require('express').Router();
+const router = require("express").Router();
+const bcryptjs = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
-  /*
+const Users = require("./auth-model");
+const { validateRegister, validateLogin } = require("./auth.middleware");
+
+router.post("/register", validateRegister, async (req, res, next) => {
+	try {
+		const credentials = req.body;
+
+		const rounds = process.env.BCRYPT_ROUNDS || 8;
+		const hash = bcryptjs.hashSync(credentials.password, rounds);
+
+		credentials.password = hash;
+		const newUser = await Users.add(credentials);
+		res.status(201).json(newUser[0]);
+	} catch (err) {
+		next(err);
+	}
+	/*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
 
@@ -28,9 +44,21 @@ router.post('/register', (req, res) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
-  /*
+router.post("/login", validateLogin, async (req, res, next) => {
+	try {
+		const { username, password } = req.body;
+		const user = await Users.findBy({ username });
+
+		if (bcryptjs.compareSync(password, user.password)) {
+			const token = generateToken(user);
+			res.status(200).json({ message: `welcome, ${username}`, token });
+		} else {
+			res.status(401).json({ errorMessage: "invalid credentials" });
+		}
+	} catch (err) {
+		next(err);
+	}
+	/*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
 
@@ -54,5 +82,18 @@ router.post('/login', (req, res) => {
       the response body should include a string exactly as follows: "invalid credentials".
   */
 });
+
+function generateToken(user) {
+	const payload = {
+		subject: user.id,
+		username: user.username,
+	};
+	const options = {
+		expiresIn: "1h",
+	};
+	const secret = process.env.JWT_SECRET;
+
+	return jwt.sign(payload, secret, options);
+}
 
 module.exports = router;
