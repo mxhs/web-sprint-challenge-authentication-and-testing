@@ -81,7 +81,6 @@ describe("server.js", () => {
 			}, 500);
 			it('responds with "username and password required" message if either is not sent', async () => {
 				let res = await request(server).post("/api/auth/register").send({});
-				console.log("STATUS", res.status);
 				expect(JSON.stringify(res.body)).toEqual(
 					expect.stringMatching(/required/i)
 				);
